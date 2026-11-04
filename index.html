@@ -883,6 +883,7 @@ service cloud.firestore {
 
         const savedTopics = localStorage.getItem('voting_app_topics');
         const initializedFlag = localStorage.getItem('voting_app_initialized');
+
         if (savedTopics !== null) {
           const parsed = JSON.parse(savedTopics);
           state.topics = Array.isArray(parsed)
@@ -892,9 +893,9 @@ service cloud.firestore {
             if (!t.status) t.status = 'open';
             if (!t.userVotes) t.userVotes = {};
           });
-        } else if (!initializedFlag) {
-          state.topics = INITIAL_TOPICS.filter(t => !t.isDeleted && !state.deletedTopicIds.has(t.id));
-          saveTopicsToLocal(state.topics);
+        } else if (!initializedFlag && state.deletedTopicIds.size === 0) {
+          state.topics = INITIAL_TOPICS;
+          saveTopicsToLocal(INITIAL_TOPICS);
           localStorage.setItem('voting_app_initialized', 'true');
         } else {
           state.topics = [];
@@ -907,7 +908,7 @@ service cloud.firestore {
           detectPublicIp();
         }
       } catch (e) {
-        state.topics = INITIAL_TOPICS.filter(t => !t.isDeleted && !state.deletedTopicIds.has(t.id));
+        state.topics = [];
       }
     }
 
@@ -932,86 +933,39 @@ service cloud.firestore {
           updateDatabaseStatusBadge(true);
 
           if (!snapshot.empty) {
-            const remoteMap = new Map();
+            const validRemoteTopics = [];
+
             snapshot.forEach((doc) => {
-              const data = doc.data();
-              remoteMap.set(doc.id, { id: doc.id, ...data });
-            });
+              const data = doc.data() || {};
+              const topicId = doc.id;
 
-            // Smart merge with local state
-            const merged = [];
-            const processedIds = new Set();
-
-            // First, process remote topics, strictly skipping deleted ones
-            remoteMap.forEach((remoteTopic, id) => {
-              processedIds.add(id);
-
-              // Check if marked deleted remotely
-              if (remoteTopic.isDeleted) {
-                state.deletedTopicIds.add(id);
-                try {
-                  localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
-                } catch (e) {}
-                return;
-              }
-
-              // Check if deleted locally
-              if (state.deletedTopicIds.has(id)) {
-                // Propagate isDeleted flag to remote so other clients drop it too
+              // Check if marked as deleted either remotely or locally
+              if (data.isDeleted === true || state.deletedTopicIds.has(topicId)) {
+                // Keep record in deletedTopicIds
+                state.deletedTopicIds.add(topicId);
+                // Also ensure remote document is deleted
                 if (db) {
-                  db.collection('voting_topics').doc(id).set({
-                    ...remoteTopic,
-                    isDeleted: true,
-                    deletedAt: Date.now()
-                  }, { merge: true }).catch(() => {});
+                  db.collection('voting_topics').doc(topicId).delete().catch(() => {});
                 }
                 return;
               }
 
-              const localTopic = state.topics.find((t) => t.id === id);
-              if (localTopic) {
-                const localVotesSum = (localTopic.options || []).reduce((s, o) => s + (o.votes || 0), 0);
-                const remoteVotesSum = (remoteTopic.options || []).reduce((s, o) => s + (o.votes || 0), 0);
-                const localUpdatedAt = localTopic.updatedAt || 0;
-                const remoteUpdatedAt = remoteTopic.updatedAt || 0;
-
-                // If local has newer votes or explicit update timestamp, keep local version and re-sync
-                if (localVotesSum > remoteVotesSum || localUpdatedAt > remoteUpdatedAt) {
-                  merged.push(localTopic);
-                  syncTopicToDatabase(localTopic);
-                  return;
-                }
-              }
-              merged.push(remoteTopic);
+              validRemoteTopics.push({ id: topicId, ...data });
             });
 
-            // Second, preserve any newly created local topics that haven't reached remote yet (if not deleted)
-            state.topics.forEach((localTopic) => {
-              if (!processedIds.has(localTopic.id) && !localTopic.isDeleted && !state.deletedTopicIds.has(localTopic.id)) {
-                merged.push(localTopic);
-                syncTopicToDatabase(localTopic);
-              }
-            });
+            try {
+              localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
+            } catch (e) {}
 
-            merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-            state.topics = merged;
-            saveTopicsToLocal(merged);
+            validRemoteTopics.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            state.topics = validRemoteTopics;
+            saveTopicsToLocal(validRemoteTopics);
             refreshCurrentView();
           } else {
-            // Remote collection is empty: only seed if user has not performed deletions
-            const initializedFlag = localStorage.getItem('voting_app_initialized');
-            if (!initializedFlag && state.deletedTopicIds.size === 0) {
-              const seedTopics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
-              seedTopics.forEach((t) => {
-                db.collection('voting_topics').doc(t.id).set(t).catch((err) => {
-                  console.warn("Initial sync write error:", err);
-                });
-              });
-              state.topics = seedTopics;
-              saveTopicsToLocal(seedTopics);
-              localStorage.setItem('voting_app_initialized', 'true');
-              refreshCurrentView();
-            }
+            // Remote collection is completely empty: reflect empty state immediately!
+            state.topics = [];
+            saveTopicsToLocal([]);
+            refreshCurrentView();
           }
         }, (error) => {
           console.warn("Firestore snapshot notice:", error);
@@ -1095,15 +1049,9 @@ service cloud.firestore {
         renderTopicsList();
       }
 
-      // 4. Dual Cloud Deletion: mark isDeleted: true first (so onSnapshot filters it out), then delete doc
+      // 4. Delete directly from Cloud Firestore
       if (db) {
-        db.collection('voting_topics').doc(topicId).set({
-          isDeleted: true,
-          deletedAt: Date.now()
-        }, { merge: true }).then(() => {
-          // Hard delete the document
-          return db.collection('voting_topics').doc(topicId).delete();
-        }).then(() => {
+        db.collection('voting_topics').doc(topicId).delete().then(() => {
           console.log("Firestore successfully deleted topic:", topicId);
         }).catch((err) => {
           console.warn("Firestore delete notice (kept deleted locally):", err);
