@@ -597,6 +597,102 @@
     </div>
   </div>
 
+  <!-- MODAL: Edit Topic Modal -->
+  <div id="modal-edit-topic" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-slate-200 transform transition-all space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">編輯投票主題</h3>
+            <p class="text-xs text-slate-500">修改主題名稱、說明與選項內容</p>
+          </div>
+        </div>
+        <button id="btn-close-edit-modal" type="button" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <form id="edit-topic-form" class="space-y-4">
+        <input type="hidden" id="edit-topic-id">
+
+        <!-- Title -->
+        <div>
+          <label for="edit-topic-title-input" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1">
+            主題名稱 <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="edit-topic-title-input" required placeholder="請輸入主題名稱" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm">
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="edit-topic-desc-input" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1">
+            主題說明 / 規則補充 <span class="text-xs font-normal text-slate-400">(選填)</span>
+          </label>
+          <textarea id="edit-topic-desc-input" rows="2" placeholder="說明此投票的目的或注意事項..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm"></textarea>
+        </div>
+
+        <!-- Selection Mode -->
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">投票方式設定</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+              <input type="radio" name="edit-topic-mode-radio" value="single" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs sm:text-sm font-semibold text-slate-800">單選模式</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer">
+              <input type="radio" name="edit-topic-mode-radio" value="multi" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+              <span class="text-xs sm:text-sm font-semibold text-slate-800">複選模式</span>
+            </label>
+          </div>
+          <div id="edit-multi-limit-config" class="hidden mt-2 pt-2 border-t border-slate-200 flex items-center gap-2">
+            <label for="edit-topic-max-choices-input" class="text-xs font-medium text-slate-700">複選上限：最多可選</label>
+            <input type="number" id="edit-topic-max-choices-input" min="2" max="10" value="2" class="w-16 px-2 py-1 border border-slate-300 rounded-lg text-sm text-center">
+            <span class="text-xs text-slate-500">項</span>
+          </div>
+        </div>
+
+        <!-- Options Editor -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs sm:text-sm font-semibold text-slate-700">
+              投票選項內容 <span class="text-rose-500">*</span>
+              <span class="text-[11px] font-normal text-slate-500 ml-1">(至少需有 2 項)</span>
+            </label>
+            <button id="btn-edit-add-option" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+              </svg>
+              新增選項
+            </button>
+          </div>
+          <div id="edit-options-inputs-container" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+            <!-- Dynamic option rows for edit -->
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button id="btn-cancel-edit-topic" type="button" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-colors">
+            取消
+          </button>
+          <button id="btn-save-edit-topic" type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            儲存修改
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Delete Confirmation Modal (WITH ADMIN PASSWORD PROMPT - NO HINTS GIVEN) -->
   <div id="modal-delete" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
@@ -1940,6 +2036,9 @@
             <button type="button" class="btn-admin-view-res text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1 py-1" data-id="${topic.id}">
               結果
             </button>
+            <button type="button" class="btn-admin-edit text-xs font-semibold text-indigo-600 hover:text-indigo-800 hover:underline px-1 py-1" data-id="${topic.id}">
+              編輯
+            </button>
             <button type="button" class="btn-admin-delete text-xs font-semibold text-rose-600 hover:text-rose-800 hover:underline px-1 py-1" data-id="${topic.id}">
               刪除
             </button>
@@ -1973,10 +2072,153 @@
         btn.addEventListener('click', () => switchView('results', btn.dataset.id));
       });
 
+      tbody.querySelectorAll('.btn-admin-edit').forEach((btn) => {
+        btn.addEventListener('click', () => openEditTopicModal(btn.dataset.id));
+      });
+
       tbody.querySelectorAll('.btn-admin-delete').forEach((btn) => {
         btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
       });
     }
+
+    // Edit Topic Modal Logic
+    function openEditTopicModal(topicId) {
+      const topic = state.topics.find((t) => t.id === topicId);
+      if (!topic) return;
+
+      document.getElementById('edit-topic-id').value = topic.id;
+      document.getElementById('edit-topic-title-input').value = topic.title;
+      document.getElementById('edit-topic-desc-input').value = topic.description || '';
+
+      const radios = document.querySelectorAll('input[name="edit-topic-mode-radio"]');
+      radios.forEach((r) => {
+        r.checked = (r.value === topic.type);
+      });
+
+      const multiConfig = document.getElementById('edit-multi-limit-config');
+      if (topic.type === 'multi') {
+        multiConfig.classList.remove('hidden');
+        document.getElementById('edit-topic-max-choices-input').value = topic.maxChoices || 2;
+      } else {
+        multiConfig.classList.add('hidden');
+      }
+
+      renderEditOptionsInputs(topic.options);
+      document.getElementById('modal-edit-topic').classList.remove('hidden');
+    }
+
+    function closeEditTopicModal() {
+      document.getElementById('modal-edit-topic').classList.add('hidden');
+    }
+
+    function renderEditOptionsInputs(options) {
+      const container = document.getElementById('edit-options-inputs-container');
+      container.innerHTML = '';
+      options.forEach((opt, idx) => {
+        addEditOptionRow(opt.text, opt.id, opt.votes, opt.colorIndex ?? idx);
+      });
+    }
+
+    function addEditOptionRow(text = '', id = null, votes = 0, colorIndex = null) {
+      const container = document.getElementById('edit-options-inputs-container');
+      const optId = id || `opt_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const colorIdx = colorIndex !== null ? colorIndex : (container.children.length % COLOR_PALETTE.length);
+      const color = COLOR_PALETTE[colorIdx % COLOR_PALETTE.length];
+
+      const row = document.createElement('div');
+      row.className = 'edit-opt-row flex items-center gap-2 group';
+      row.dataset.optId = optId;
+      row.dataset.votes = votes;
+      row.dataset.colorIndex = colorIdx;
+
+      row.innerHTML = `
+        <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: ${color.bg}; border: 1px solid ${color.border}">
+          <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${color.border}"></span>
+        </div>
+        <input type="text" value="${text}" placeholder="請輸入選項內容" required class="flex-1 min-w-0 px-3 py-1.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-xs sm:text-sm">
+        <button type="button" class="btn-remove-edit-option p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0" title="刪除此選項">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+          </svg>
+        </button>
+      `;
+
+      row.querySelector('.btn-remove-edit-option').addEventListener('click', () => {
+        if (container.children.length <= 2) {
+          showToast('主題至少需保留 2 個選項！', 'error');
+          return;
+        }
+        row.remove();
+      });
+
+      container.appendChild(row);
+    }
+
+    document.getElementById('btn-close-edit-modal').addEventListener('click', closeEditTopicModal);
+    document.getElementById('btn-cancel-edit-topic').addEventListener('click', closeEditTopicModal);
+
+    document.getElementById('btn-edit-add-option').addEventListener('click', () => {
+      const container = document.getElementById('edit-options-inputs-container');
+      if (container.children.length >= 10) {
+        showToast('單一主題最多支援 10 個選項', 'error');
+        return;
+      }
+      addEditOptionRow();
+    });
+
+    document.querySelectorAll('input[name="edit-topic-mode-radio"]').forEach((r) => {
+      r.addEventListener('change', (e) => {
+        const cfg = document.getElementById('edit-multi-limit-config');
+        if (e.target.value === 'multi') {
+          cfg.classList.remove('hidden');
+        } else {
+          cfg.classList.add('hidden');
+        }
+      });
+    });
+
+    document.getElementById('edit-topic-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const topicId = document.getElementById('edit-topic-id').value;
+      const topic = state.topics.find((t) => t.id === topicId);
+      if (!topic) return;
+
+      const title = document.getElementById('edit-topic-title-input').value.trim();
+      const desc = document.getElementById('edit-topic-desc-input').value.trim();
+      const mode = document.querySelector('input[name="edit-topic-mode-radio"]:checked').value;
+      const maxChoices = mode === 'multi' ? (parseInt(document.getElementById('edit-topic-max-choices-input').value) || 2) : 1;
+
+      const rows = document.querySelectorAll('.edit-opt-row');
+      const newOptions = [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const input = row.querySelector('input[type="text"]');
+        const text = input.value.trim();
+        if (!text) continue;
+        newOptions.push({
+          id: row.dataset.optId,
+          text: text,
+          votes: parseInt(row.dataset.votes) || 0,
+          colorIndex: parseInt(row.dataset.colorIndex) || (i % COLOR_PALETTE.length)
+        });
+      }
+
+      if (newOptions.length < 2) {
+        showToast('主題至少需要提供 2 個有效選項！', 'error');
+        return;
+      }
+
+      topic.title = title;
+      topic.description = desc;
+      topic.type = mode;
+      topic.maxChoices = maxChoices;
+      topic.options = newOptions;
+
+      saveTopics();
+      closeEditTopicModal();
+      showToast(`主題「${topic.title}」已成功更新！`, 'success');
+      renderAdminTable();
+    });
 
     // Delete Modal Logic
     function openDeleteModal(topicId) {
