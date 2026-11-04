@@ -649,7 +649,7 @@
           </div>
           <div>
             <h3 class="text-base sm:text-lg font-bold text-slate-900">Firestore 雲端資料庫連線指南</h3>
-            <p class="text-xs text-slate-500">專案 ID: <span class="font-mono font-semibold text-slate-700">vote-ac8a5</span></p>
+            <p class="text-xs text-slate-500">專案 ID: <span class="font-mono font-semibold text-slate-700">votenew-9ec01</span></p>
           </div>
         </div>
         <button id="btn-close-firestore-guide" type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
@@ -671,7 +671,7 @@
           <h4 class="font-bold text-slate-800 mb-1">若要在多台裝置間即時同步，請依序檢查：</h4>
           <ol class="list-decimal list-inside space-y-2 text-xs leading-relaxed text-slate-700 pl-1">
             <li>
-              <strong>建立 Firestore 資料庫：</strong>前往 <a href="https://console.firebase.google.com/project/vote-ac8a5/firestore" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">Firebase Console (vote-ac8a5)</a>，點擊「組建 (Build) → Firestore Database」，若尚未建立，請點擊「建立資料庫 (Create database)」。
+              <strong>建立 Firestore 資料庫：</strong>前往 <a href="https://console.firebase.google.com/project/votenew-9ec01/firestore" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">Firebase Console (votenew-9ec01)</a>，點擊「組建 (Build) → Firestore Database」，若尚未建立，請點擊「建立資料庫 (Create database)」。
             </li>
             <li>
               <strong>開啟安全規則 (Rules)：</strong>點選資料庫上方的「規則 (Rules)」分頁，將規則替換為允許讀寫：
@@ -829,13 +829,13 @@ service cloud.firestore {
 
     // Firebase Configuration & Initialization
     const firebaseConfig = {
-      apiKey: "AIzaSyCjYwAVh32OpoUKpB-DGC4bnOAJsEhNtls",
-      authDomain: "vote-ac8a5.firebaseapp.com",
-      projectId: "vote-ac8a5",
-      storageBucket: "vote-ac8a5.firebasestorage.app",
-      messagingSenderId: "1060762408131",
-      appId: "1:1060762408131:web:10f36eae6e965cdd67fe76",
-      measurementId: "G-TJP8GHTQXZ"
+      apiKey: "AIzaSyAQBBeYXA6Y71KQQtNv5TONSmZ-3StVQNQ",
+      authDomain: "votenew-9ec01.firebaseapp.com",
+      projectId: "votenew-9ec01",
+      storageBucket: "votenew-9ec01.firebasestorage.app",
+      messagingSenderId: "464243025007",
+      appId: "1:464243025007:web:a2d24bd0a877527f24599a",
+      measurementId: "G-5560HHS7Q6"
     };
 
     let db = null;
@@ -2406,11 +2406,21 @@ service cloud.firestore {
       topic.type = mode;
       topic.maxChoices = maxChoices;
       topic.options = newOptions;
+      topic.updatedAt = Date.now();
 
+      // Immediately persist to local storage
+      saveTopicsToLocal(state.topics);
+
+      // Immediately sync to Cloud Firestore
       syncTopicToDatabase(topic);
+
+      // Close modal and refresh views
       closeEditTopicModal();
       showToast(`主題「${topic.title}」已成功更新！`, 'success');
       renderAdminTable();
+      if (state.activeView === 'topics') {
+        renderTopicsList();
+      }
     });
 
     // Delete Modal Logic
