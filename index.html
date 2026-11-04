@@ -885,13 +885,15 @@ service cloud.firestore {
         const initializedFlag = localStorage.getItem('voting_app_initialized');
         if (savedTopics !== null) {
           const parsed = JSON.parse(savedTopics);
-          state.topics = Array.isArray(parsed) ? parsed.filter(t => !state.deletedTopicIds.has(t.id)) : [];
+          state.topics = Array.isArray(parsed)
+            ? parsed.filter(t => !t.isDeleted && !state.deletedTopicIds.has(t.id))
+            : [];
           state.topics.forEach((t) => {
             if (!t.status) t.status = 'open';
             if (!t.userVotes) t.userVotes = {};
           });
         } else if (!initializedFlag) {
-          state.topics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
+          state.topics = INITIAL_TOPICS.filter(t => !t.isDeleted && !state.deletedTopicIds.has(t.id));
           saveTopicsToLocal(state.topics);
           localStorage.setItem('voting_app_initialized', 'true');
         } else {
@@ -905,7 +907,7 @@ service cloud.firestore {
           detectPublicIp();
         }
       } catch (e) {
-        state.topics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
+        state.topics = INITIAL_TOPICS.filter(t => !t.isDeleted && !state.deletedTopicIds.has(t.id));
       }
     }
 
@@ -940,16 +942,32 @@ service cloud.firestore {
             const merged = [];
             const processedIds = new Set();
 
-            // First, process remote topics, respecting deletedTopicIds
+            // First, process remote topics, strictly skipping deleted ones
             remoteMap.forEach((remoteTopic, id) => {
               processedIds.add(id);
+
+              // Check if marked deleted remotely
+              if (remoteTopic.isDeleted) {
+                state.deletedTopicIds.add(id);
+                try {
+                  localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
+                } catch (e) {}
+                return;
+              }
+
+              // Check if deleted locally
               if (state.deletedTopicIds.has(id)) {
-                // If this topic was deleted locally, clean up remote document as well
+                // Propagate isDeleted flag to remote so other clients drop it too
                 if (db) {
-                  db.collection('voting_topics').doc(id).delete().catch(() => {});
+                  db.collection('voting_topics').doc(id).set({
+                    ...remoteTopic,
+                    isDeleted: true,
+                    deletedAt: Date.now()
+                  }, { merge: true }).catch(() => {});
                 }
                 return;
               }
+
               const localTopic = state.topics.find((t) => t.id === id);
               if (localTopic) {
                 const localVotesSum = (localTopic.options || []).reduce((s, o) => s + (o.votes || 0), 0);
@@ -967,9 +985,9 @@ service cloud.firestore {
               merged.push(remoteTopic);
             });
 
-            // Second, preserve any newly created local topics that haven't reached remote yet
+            // Second, preserve any newly created local topics that haven't reached remote yet (if not deleted)
             state.topics.forEach((localTopic) => {
-              if (!processedIds.has(localTopic.id)) {
+              if (!processedIds.has(localTopic.id) && !localTopic.isDeleted && !state.deletedTopicIds.has(localTopic.id)) {
                 merged.push(localTopic);
                 syncTopicToDatabase(localTopic);
               }
@@ -980,14 +998,19 @@ service cloud.firestore {
             saveTopicsToLocal(merged);
             refreshCurrentView();
           } else {
-            // Remote collection is empty: upload current non-deleted local topics to Firestore
-            const nonDeleted = state.topics.filter(t => !state.deletedTopicIds.has(t.id));
-            if (nonDeleted.length > 0) {
-              nonDeleted.forEach((t) => {
+            // Remote collection is empty: only seed if user has not performed deletions
+            const initializedFlag = localStorage.getItem('voting_app_initialized');
+            if (!initializedFlag && state.deletedTopicIds.size === 0) {
+              const seedTopics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
+              seedTopics.forEach((t) => {
                 db.collection('voting_topics').doc(t.id).set(t).catch((err) => {
                   console.warn("Initial sync write error:", err);
                 });
               });
+              state.topics = seedTopics;
+              saveTopicsToLocal(seedTopics);
+              localStorage.setItem('voting_app_initialized', 'true');
+              refreshCurrentView();
             }
           }
         }, (error) => {
@@ -1032,13 +1055,10 @@ service cloud.firestore {
     }
 
     function syncTopicToDatabase(topic) {
-      topic.updatedAt = Date.now();
-      if (state.deletedTopicIds.has(topic.id)) {
-        state.deletedTopicIds.delete(topic.id);
-        try {
-          localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
-        } catch (e) {}
+      if (!topic || topic.isDeleted || state.deletedTopicIds.has(topic.id)) {
+        return;
       }
+      topic.updatedAt = Date.now();
       saveTopicsToLocal(state.topics);
 
       if (db) {
@@ -1069,16 +1089,22 @@ service cloud.firestore {
       state.topics = state.topics.filter((t) => t.id !== topicId);
       saveTopicsToLocal(state.topics);
 
-      // 3. Re-render views immediately so UI reflects deletion on every consecutive click
+      // 3. Re-render views immediately so UI reflects deletion immediately
       renderAdminTable();
       if (state.activeView === 'topics') {
         renderTopicsList();
       }
 
-      // 4. Asynchronously delete from Cloud Firestore if available
+      // 4. Dual Cloud Deletion: mark isDeleted: true first (so onSnapshot filters it out), then delete doc
       if (db) {
-        db.collection('voting_topics').doc(topicId).delete().then(() => {
-          console.log("Firestore successfully deleted:", topicId);
+        db.collection('voting_topics').doc(topicId).set({
+          isDeleted: true,
+          deletedAt: Date.now()
+        }, { merge: true }).then(() => {
+          // Hard delete the document
+          return db.collection('voting_topics').doc(topicId).delete();
+        }).then(() => {
+          console.log("Firestore successfully deleted topic:", topicId);
         }).catch((err) => {
           console.warn("Firestore delete notice (kept deleted locally):", err);
         });
