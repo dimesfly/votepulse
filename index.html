@@ -1784,7 +1784,8 @@ service cloud.firestore {
       syncTopicToDatabase(topic);
       showToast('🎉 投票成功！感謝您的參與', 'success');
 
-      switchView('topics');
+      // Stay on the current topic vote view in read-only mode showing user selection
+      renderVoteView(topic.id);
     });
 
     // Render Results View
