@@ -884,15 +884,15 @@ service cloud.firestore {
         const savedTopics = localStorage.getItem('voting_app_topics');
         const initializedFlag = localStorage.getItem('voting_app_initialized');
         if (savedTopics !== null) {
-          state.topics = JSON.parse(savedTopics);
-          state.topics = state.topics.filter(t => !state.deletedTopicIds.has(t.id));
+          const parsed = JSON.parse(savedTopics);
+          state.topics = Array.isArray(parsed) ? parsed.filter(t => !state.deletedTopicIds.has(t.id)) : [];
           state.topics.forEach((t) => {
             if (!t.status) t.status = 'open';
             if (!t.userVotes) t.userVotes = {};
           });
         } else if (!initializedFlag) {
-          state.topics = INITIAL_TOPICS;
-          saveTopicsToLocal(INITIAL_TOPICS);
+          state.topics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
+          saveTopicsToLocal(state.topics);
           localStorage.setItem('voting_app_initialized', 'true');
         } else {
           state.topics = [];
@@ -905,7 +905,7 @@ service cloud.firestore {
           detectPublicIp();
         }
       } catch (e) {
-        state.topics = INITIAL_TOPICS;
+        state.topics = INITIAL_TOPICS.filter(t => !state.deletedTopicIds.has(t.id));
       }
     }
 
@@ -980,9 +980,10 @@ service cloud.firestore {
             saveTopicsToLocal(merged);
             refreshCurrentView();
           } else {
-            // Remote collection is empty: upload local topics to Firestore
-            if (state.topics.length > 0) {
-              state.topics.forEach((t) => {
+            // Remote collection is empty: upload current non-deleted local topics to Firestore
+            const nonDeleted = state.topics.filter(t => !state.deletedTopicIds.has(t.id));
+            if (nonDeleted.length > 0) {
+              nonDeleted.forEach((t) => {
                 db.collection('voting_topics').doc(t.id).set(t).catch((err) => {
                   console.warn("Initial sync write error:", err);
                 });
@@ -1056,19 +1057,30 @@ service cloud.firestore {
     }
 
     function deleteTopicFromDatabase(topicId) {
+      if (!topicId) return;
+
+      // 1. Add to tombstone set and persist
       state.deletedTopicIds.add(topicId);
       try {
         localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
       } catch (e) {}
 
+      // 2. Remove immediately from memory state and persist topics
       state.topics = state.topics.filter((t) => t.id !== topicId);
       saveTopicsToLocal(state.topics);
 
+      // 3. Re-render views immediately so UI reflects deletion on every consecutive click
+      renderAdminTable();
+      if (state.activeView === 'topics') {
+        renderTopicsList();
+      }
+
+      // 4. Asynchronously delete from Cloud Firestore if available
       if (db) {
         db.collection('voting_topics').doc(topicId).delete().then(() => {
           console.log("Firestore successfully deleted:", topicId);
         }).catch((err) => {
-          console.warn("Firestore delete notice:", err);
+          console.warn("Firestore delete notice (kept deleted locally):", err);
         });
       }
     }
@@ -2427,7 +2439,7 @@ service cloud.firestore {
 
     document.getElementById('btn-cancel-delete').addEventListener('click', closeDeleteModal);
 
-    document.getElementById('btn-confirm-delete').addEventListener('click', () => {
+    function executeConfirmDelete() {
       const pwdInput = document.getElementById('delete-password-input');
       const enteredPassword = (pwdInput.value || '').trim();
       const errorEl = document.getElementById('delete-password-error');
@@ -2441,20 +2453,15 @@ service cloud.firestore {
       }
 
       const targetId = state.topicToDeleteId;
-      if (!targetId) {
-        closeDeleteModal();
-        return;
-      }
-
-      deleteTopicFromDatabase(targetId);
-
       closeDeleteModal();
-      showToast('主題已成功刪除！', 'success');
-      renderAdminTable();
-      if (state.activeView === 'topics') {
-        renderTopicsList();
+
+      if (targetId) {
+        deleteTopicFromDatabase(targetId);
+        showToast('主題已成功刪除！', 'success');
       }
-    });
+    }
+
+    document.getElementById('btn-confirm-delete').addEventListener('click', executeConfirmDelete);
 
     // Clear error style on input change
     document.getElementById('delete-password-input').addEventListener('input', () => {
@@ -2466,7 +2473,8 @@ service cloud.firestore {
 
     document.getElementById('delete-password-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        document.getElementById('btn-confirm-delete').click();
+        e.preventDefault();
+        executeConfirmDelete();
       }
     });
 
