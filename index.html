@@ -10,48 +10,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
   <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- Firebase SDK (Modular ESM with Importmap) -->
-  <script type="importmap">
-  {
-    "imports": {
-      "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
-      "firebase/analytics": "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js"
-    }
-  }
-  </script>
-  <script type="module">
-    // Import the functions you need from the SDKs you need
-    import { initializeApp } from "firebase/app";
-    import { getAnalytics } from "firebase/analytics";
-
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-    const firebaseConfig = {
-      apiKey: "AIzaSyCjYwAVh32OpoUKpB-DGC4bnOAJsEhNtls",
-      authDomain: "vote-ac8a5.firebaseapp.com",
-      projectId: "vote-ac8a5",
-      storageBucket: "vote-ac8a5.firebasestorage.app",
-      messagingSenderId: "1060762408131",
-      appId: "1:1060762408131:web:10f36eae6e965cdd67fe76",
-      measurementId: "G-TJP8GHTQXZ"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    let analytics = null;
-    try {
-      analytics = getAnalytics(app);
-    } catch (e) {
-      console.warn("Firebase Analytics initialization warning:", e);
-    }
-
-    // Expose to window for global access
-    window.app = app;
-    window.analytics = analytics;
-    window.firebaseApp = app;
-    window.firebaseAnalytics = analytics;
-    window.firebaseConfig = firebaseConfig;
-  </script>
+  <!-- Firebase SDK (Compat with Firestore & Analytics) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
     body {
@@ -297,6 +259,7 @@
           <div class="flex items-center gap-2">
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">後台主題管理</h2>
             <span class="px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-indigo-100 text-indigo-700">管理者已認證</span>
+            <button id="firestore-status-badge" type="button" class="px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 hover:opacity-90 transition-all flex items-center gap-1 cursor-pointer" title="查看雲端資料庫狀態與設定說明">🟢 Firestore 狀態檢測中</button>
           </div>
           <p class="text-xs sm:text-sm text-slate-500 mt-0.5">建立新主題、開放/結束投票通道、設定單複選、檢視統計結果與刪除主題</p>
         </div>
@@ -675,6 +638,74 @@
   </div>
 
   <!-- Delete Confirmation Modal (WITH ADMIN PASSWORD PROMPT - NO HINTS GIVEN) -->
+  
+  <!-- Firestore Database Setup & Rules Guide Modal -->
+  <div id="modal-firestore-guide" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            ☁️
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900">Firestore 雲端資料庫連線指南</h3>
+            <p class="text-xs text-slate-500">專案 ID: <span class="font-mono font-semibold text-slate-700">vote-ac8a5</span></p>
+          </div>
+        </div>
+        <button id="btn-close-firestore-guide" type="button" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs sm:text-sm text-slate-600">
+        <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl">
+          <p class="font-bold text-indigo-900 mb-1">💡 雙軌無縫架構保障：</p>
+          <p class="text-indigo-800 text-xs leading-relaxed">
+            系統已內建「本機即時優先」機制。無論雲端是否連線，建立主題、修改內容與投票都會<strong>立即更新於您的瀏覽器本機儲存</strong>，操作絕不卡頓或遺失！
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-slate-800 mb-1">若要在多台裝置間即時同步，請依序檢查：</h4>
+          <ol class="list-decimal list-inside space-y-2 text-xs leading-relaxed text-slate-700 pl-1">
+            <li>
+              <strong>建立 Firestore 資料庫：</strong>前往 <a href="https://console.firebase.google.com/project/vote-ac8a5/firestore" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline font-semibold">Firebase Console (vote-ac8a5)</a>，點擊「組建 (Build) → Firestore Database」，若尚未建立，請點擊「建立資料庫 (Create database)」。
+            </li>
+            <li>
+              <strong>開啟安全規則 (Rules)：</strong>點選資料庫上方的「規則 (Rules)」分頁，將規則替換為允許讀寫：
+            </li>
+          </ol>
+        </div>
+
+        <div class="relative bg-slate-900 text-slate-200 p-3.5 rounded-xl font-mono text-xs overflow-x-auto">
+          <pre>rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</pre>
+          <button id="btn-copy-firestore-rules" type="button" class="absolute top-2.5 right-2.5 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded text-[11px] font-sans border border-slate-700 transition-colors">
+            複製規則代碼
+          </button>
+        </div>
+
+        <p class="text-[11px] text-slate-500">
+          * 貼上後點擊右上角的「發布 (Publish)」，重新整理此頁面即可自動完成雙向即時雲端同步！
+        </p>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end">
+        <button id="btn-confirm-firestore-guide" type="button" class="w-full sm:w-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl transition-all">
+          我知道了
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-delete" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
       <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-1">
@@ -796,6 +827,38 @@
       }
     ];
 
+    // Firebase Configuration & Initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjYwAVh32OpoUKpB-DGC4bnOAJsEhNtls",
+      authDomain: "vote-ac8a5.firebaseapp.com",
+      projectId: "vote-ac8a5",
+      storageBucket: "vote-ac8a5.firebasestorage.app",
+      messagingSenderId: "1060762408131",
+      appId: "1:1060762408131:web:10f36eae6e965cdd67fe76",
+      measurementId: "G-TJP8GHTQXZ"
+    };
+
+    let db = null;
+    let analytics = null;
+    let app = null;
+
+    try {
+      if (typeof firebase !== 'undefined') {
+        app = firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        try {
+          analytics = firebase.analytics();
+        } catch (e) {}
+      }
+    } catch (e) {
+      console.warn("Firebase initialization notice:", e);
+    }
+
+    window.app = app;
+    window.db = db;
+    window.analytics = analytics;
+    window.firebaseConfig = firebaseConfig;
+
     const state = {
       topics: [],
       currentIp: '192.168.1.101',
@@ -806,10 +869,11 @@
       topicToDeleteId: null,
       isAdminLoggedIn: false,
       isCreatePanelExpanded: false,
-      nextOptionTempId: 1
+      nextOptionTempId: 1,
+      isFirestoreConnected: false
     };
 
-    function loadState() {
+    function loadLocalState() {
       try {
         const savedTopics = localStorage.getItem('voting_app_topics');
         if (savedTopics) {
@@ -820,7 +884,7 @@
           });
         } else {
           state.topics = INITIAL_TOPICS;
-          saveTopics();
+          saveTopicsToLocal(INITIAL_TOPICS);
         }
 
         const savedIp = localStorage.getItem('voting_app_current_ip');
@@ -834,11 +898,148 @@
       }
     }
 
-    function saveTopics() {
+    function saveTopicsToLocal(topics) {
       try {
-        localStorage.setItem('voting_app_topics', JSON.stringify(state.topics));
+        localStorage.setItem('voting_app_topics', JSON.stringify(topics));
       } catch (e) {
         console.error('Storage save error', e);
+      }
+    }
+
+    // Real-time Cloud Firestore synchronization with smart local merge
+    function initDatabaseSync() {
+      if (!db) {
+        updateDatabaseStatusBadge(false, '本機儲存模式 (未載入 Firebase)');
+        return;
+      }
+
+      try {
+        db.collection('voting_topics').onSnapshot((snapshot) => {
+          state.isFirestoreConnected = true;
+          updateDatabaseStatusBadge(true);
+
+          if (!snapshot.empty) {
+            const remoteMap = new Map();
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              remoteMap.set(doc.id, { id: doc.id, ...data });
+            });
+
+            // Smart merge with local state
+            const merged = [];
+            const processedIds = new Set();
+
+            // First, process remote topics, merging with any local votes if remote is behind
+            remoteMap.forEach((remoteTopic, id) => {
+              processedIds.add(id);
+              const localTopic = state.topics.find((t) => t.id === id);
+              if (localTopic) {
+                const localVotesSum = (localTopic.options || []).reduce((s, o) => s + (o.votes || 0), 0);
+                const remoteVotesSum = (remoteTopic.options || []).reduce((s, o) => s + (o.votes || 0), 0);
+                const localUpdatedAt = localTopic.updatedAt || 0;
+                const remoteUpdatedAt = remoteTopic.updatedAt || 0;
+
+                // If local has newer votes or explicit update timestamp, keep local version and re-sync
+                if (localVotesSum > remoteVotesSum || localUpdatedAt > remoteUpdatedAt) {
+                  merged.push(localTopic);
+                  syncTopicToDatabase(localTopic);
+                  return;
+                }
+              }
+              merged.push(remoteTopic);
+            });
+
+            // Second, preserve any newly created local topics that haven't reached remote yet
+            state.topics.forEach((localTopic) => {
+              if (!processedIds.has(localTopic.id)) {
+                merged.push(localTopic);
+                syncTopicToDatabase(localTopic);
+              }
+            });
+
+            merged.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+            state.topics = merged;
+            saveTopicsToLocal(merged);
+            refreshCurrentView();
+          } else {
+            // Remote collection is empty: upload local topics to Firestore
+            if (state.topics.length > 0) {
+              state.topics.forEach((t) => {
+                db.collection('voting_topics').doc(t.id).set(t).catch((err) => {
+                  console.warn("Initial sync write error:", err);
+                });
+              });
+            }
+          }
+        }, (error) => {
+          console.warn("Firestore snapshot notice:", error);
+          state.isFirestoreConnected = false;
+          let noticeReason = '已啟用本機儲存保護';
+          if (error && error.code === 'permission-denied') {
+            noticeReason = '權限未開放 (點擊查看教學)';
+            showToast('⚠️ Firestore 權限尚未開放，資料已即時寫入本機！點擊後台狀態標籤查看開放步驟', 'error');
+          } else if (error && error.code === 'failed-precondition') {
+            noticeReason = '資料庫尚未初始化';
+          }
+          updateDatabaseStatusBadge(false, noticeReason);
+        });
+      } catch (err) {
+        console.warn("Firestore setup exception:", err);
+        state.isFirestoreConnected = false;
+        updateDatabaseStatusBadge(false, '連線異常，本機正常運作');
+      }
+    }
+
+    function updateDatabaseStatusBadge(isConnected, customLabel = null) {
+      const badge = document.getElementById('firestore-status-badge');
+      if (badge) {
+        if (isConnected) {
+          badge.className = 'px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200 hover:opacity-90 transition-all flex items-center gap-1 cursor-pointer';
+          badge.innerHTML = '🟢 <span>Firestore 雲端同步中</span>';
+          badge.title = '點擊檢視雲端資料庫連線詳情';
+        } else {
+          badge.className = 'px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition-all flex items-center gap-1 cursor-pointer';
+          badge.innerHTML = `⚠️ <span>${customLabel || '雲端尚未連線 (點擊看設定)'}</span>`;
+          badge.title = '點擊開啟 Firestore 資料庫與規則設定指南';
+        }
+      }
+    }
+
+    function refreshCurrentView() {
+      if (state.activeView === 'topics') renderTopicsList();
+      else if (state.activeView === 'admin') renderAdminTable();
+      else if (state.activeView === 'results' && state.selectedTopicId) renderResultsView(state.selectedTopicId);
+      else if (state.activeView === 'vote' && state.selectedTopicId) renderVoteView(state.selectedTopicId);
+    }
+
+    function syncTopicToDatabase(topic) {
+      topic.updatedAt = Date.now();
+      saveTopicsToLocal(state.topics);
+
+      if (db) {
+        db.collection('voting_topics').doc(topic.id).set(topic).then(() => {
+          console.log("Firestore successfully written:", topic.id);
+        }).catch((err) => {
+          console.warn("Firestore sync write notice:", err);
+          state.isFirestoreConnected = false;
+          if (err && err.code === 'permission-denied') {
+            updateDatabaseStatusBadge(false, '權限被拒 (點此設定)');
+          } else {
+            updateDatabaseStatusBadge(false, '本機儲存已就緒');
+          }
+        });
+      }
+    }
+
+    function deleteTopicFromDatabase(topicId) {
+      state.topics = state.topics.filter((t) => t.id !== topicId);
+      saveTopicsToLocal(state.topics);
+      if (db) {
+        db.collection('voting_topics').doc(topicId).delete().then(() => {
+          console.log("Firestore successfully deleted:", topicId);
+        }).catch((err) => {
+          console.warn("Firestore delete notice:", err);
+        });
       }
     }
 
@@ -1563,7 +1764,8 @@
         topic.votedIps.push(state.currentIp);
       }
 
-      saveTopics();
+      saveTopicsToLocal(state.topics);
+      syncTopicToDatabase(topic);
       showToast('🎉 投票成功！感謝您的參與', 'success');
 
       switchView('topics');
@@ -1907,7 +2109,7 @@
       };
 
       state.topics.unshift(newTopic);
-      saveTopics();
+      syncTopicToDatabase(newTopic);
 
       titleInput.value = '';
       descInput.value = '';
@@ -2008,7 +2210,7 @@
             topic.status = 'open';
             showToast(`已重新開放主題「${topic.title}」之投票`, 'success');
           }
-          saveTopics();
+          syncTopicToDatabase(topic);
           renderAdminTable();
         });
       });
@@ -2163,7 +2365,7 @@
       topic.maxChoices = maxChoices;
       topic.options = newOptions;
 
-      saveTopics();
+      syncTopicToDatabase(topic);
       closeEditTopicModal();
       showToast(`主題「${topic.title}」已成功更新！`, 'success');
       renderAdminTable();
@@ -2203,8 +2405,7 @@
         return;
       }
 
-      state.topics = state.topics.filter((t) => t.id !== state.topicToDeleteId);
-      saveTopics();
+      deleteTopicFromDatabase(state.topicToDeleteId);
 
       closeDeleteModal();
       showToast('主題已成功刪除', 'success');
@@ -2243,8 +2444,39 @@
 
     window.addEventListener('hashchange', handleHashRouting);
 
+    // Firestore Guide Modal Event Listeners
+    function openFirestoreGuideModal() {
+      const modal = document.getElementById('modal-firestore-guide');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeFirestoreGuideModal() {
+      const modal = document.getElementById('modal-firestore-guide');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    const badgeBtn = document.getElementById('firestore-status-badge');
+    if (badgeBtn) {
+      badgeBtn.addEventListener('click', openFirestoreGuideModal);
+    }
+
+    const closeGuideBtn = document.getElementById('btn-close-firestore-guide');
+    if (closeGuideBtn) closeGuideBtn.addEventListener('click', closeFirestoreGuideModal);
+
+    const confirmGuideBtn = document.getElementById('btn-confirm-firestore-guide');
+    if (confirmGuideBtn) confirmGuideBtn.addEventListener('click', closeFirestoreGuideModal);
+
+    const copyRulesBtn = document.getElementById('btn-copy-firestore-rules');
+    if (copyRulesBtn) {
+      copyRulesBtn.addEventListener('click', () => {
+        const rulesText = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if true;\n    }\n  }\n}`;
+        copyToClipboard(rulesText, 'Firestore 安全規則代碼已複製！');
+      });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
-      loadState();
+      loadLocalState();
+      initDatabaseSync();
       const routed = handleHashRouting();
       if (!routed) {
         switchView('topics');
