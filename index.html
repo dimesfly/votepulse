@@ -55,20 +55,22 @@
     <div class="max-w-6xl mx-auto px-3 sm:px-6">
       <!-- Main Nav Row -->
       <div class="h-14 sm:h-16 flex items-center justify-between gap-2">
-        <!-- Brand Title (Click 4 times to trigger admin login) -->
-        <button id="nav-brand-btn" type="button" class="flex items-center gap-2 group text-left flex-shrink-0 min-w-0 select-none cursor-pointer focus:outline-none transition-transform active:scale-95" title="連續點選 4 下進入後台管理">
-          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-100 flex-shrink-0 group-hover:scale-105 transition-transform">
+        <!-- Brand Title:
+             On normal views: click 4 times triggers admin login modal.
+             On scan-to-vote page (#vote-topicId): completely inert (no click, no cursor pointer, no title) -->
+        <div id="nav-brand-container" class="flex items-center gap-2 text-left flex-shrink-0 min-w-0 select-none">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md shadow-indigo-100 flex-shrink-0">
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
             </svg>
           </div>
           <div class="truncate">
-            <h1 class="text-sm sm:text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight whitespace-nowrap">金好用即時線上投票系統</h1>
+            <h1 class="text-sm sm:text-lg font-bold text-slate-900 leading-tight whitespace-nowrap">金好用即時線上投票系統</h1>
             <p class="hidden sm:block text-xs text-slate-500 font-medium whitespace-nowrap">即時長條圖統計 • IP 防重複投票</p>
           </div>
-        </button>
+        </div>
 
-        <!-- Right Side: Desktop IP Badge (Hidden) -->
+        <!-- Hidden IP Containers (Kept in DOM for script compat) -->
         <div class="hidden items-center gap-1.5 sm:gap-4 flex-shrink-0">
           <div class="hidden relative" id="ip-container">
             <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-200 px-2.5 py-1.5 rounded-lg text-xs text-slate-700">
@@ -118,40 +120,38 @@
       </div>
     </section>
 
-    <!-- VIEW 2: Voting View -->
-    <section id="view-vote" class="hidden max-w-3xl mx-auto space-y-4 sm:space-y-6">
-
-      <!-- Closed Notice Banner (Shown when topic is closed) -->
-      <div id="vote-closed-notice" class="hidden p-4 sm:p-5 rounded-2xl border border-rose-200 bg-rose-50 text-rose-900 flex items-start gap-3 shadow-xs">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-          </svg>
-        </div>
-        <div class="flex-1 text-xs sm:text-sm">
-          <p class="font-bold text-sm sm:text-base text-rose-900">本投票主題已結束投票</p>
-          <p class="text-rose-800 mt-1 leading-relaxed">管理者已關閉本主題的投票通道，目前不再接受新的選票投遞。</p>
-        </div>
-      </div>
-
-      <!-- Voting Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
-            <button type="button" id="vote-card-status-badge" class="px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 transition-transform active:scale-95 select-none focus:outline-none cursor-pointer" title="連續點擊 4 下可驗證解鎖結果">
+    <!-- VIEW 2: Voting View (User Action - No back button per user requirement) -->
+    <section id="view-vote" class="hidden space-y-4 sm:space-y-6 max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Vote Header -->
+        <div class="p-4 sm:p-6 border-b border-slate-100 bg-gradient-to-b from-slate-50/50 to-white">
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span id="vote-card-status-badge" class="px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 transition-transform active:scale-95 select-none focus:outline-none cursor-pointer" title="連續點選 4 下解鎖檢視結果">
               開放投票中
-            </button>
-            <span id="vote-card-type-badge" class="px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-indigo-100 text-indigo-700">單選投票</span>
-            <span id="vote-card-max-badge" class="hidden px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-medium bg-amber-100 text-amber-800">最多可選 2 項</span>
-            <span class="text-[11px] sm:text-xs text-slate-400 font-mono ml-auto" id="vote-card-created-at">建立日期</span>
+            </span>
+            <span id="vote-card-type-badge" class="px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+              單選投票
+            </span>
+            <span id="vote-card-max-badge" class="hidden px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+              上限 2 項
+            </span>
           </div>
-          <h2 id="vote-card-title" class="text-lg sm:text-2xl font-bold text-slate-900 leading-snug">投票主題標題</h2>
-          <p id="vote-card-desc" class="text-xs sm:text-sm text-slate-600 mt-2 whitespace-pre-line"></p>
+
+          <h2 id="vote-card-title" class="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+            投票主題標題載入中...
+          </h2>
+          <p id="vote-card-desc" class="text-xs sm:text-sm text-slate-600 mt-1.5 leading-relaxed">
+            投票說明與注意事項載入中...
+          </p>
+
+          <div class="mt-3 text-[11px] text-slate-400 font-mono" id="vote-card-created-at">
+            發布日期：載入中
+          </div>
         </div>
 
-        <!-- IP Status Notice Banner -->
-        <div id="vote-ip-notice" class="p-3.5 sm:p-4 mx-4 sm:mx-6 mt-4 sm:mt-6 rounded-xl border flex items-start gap-2.5 sm:gap-3">
-          <!-- Populated dynamically -->
+        <!-- Dynamic Notice Box -->
+        <div id="vote-status-notice-box" class="p-3.5 sm:p-4 mx-4 sm:mx-6 mt-4 sm:mt-6 rounded-xl border flex items-start gap-2.5 sm:gap-3 transition-all">
+          <!-- Filled dynamically -->
         </div>
 
         <!-- Voting Options Form -->
@@ -180,73 +180,74 @@
     <section id="view-results" class="hidden space-y-4 sm:space-y-6">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-slate-200">
         <div>
-          <button id="btn-results-back" type="button" class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 mb-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-indigo-100 text-indigo-700">即時投票結果 (管理者授權)</span>
+            <span id="results-status-badge" class="px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800">開放投票中</span>
+          </div>
+          <h2 id="results-topic-title" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">主題名稱</h2>
+          <p id="results-topic-desc" class="text-xs sm:text-sm text-slate-500 mt-0.5">統計圖表即時展示各選項票數與百分比</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="btn-results-back" type="button" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
             </svg>
             返回主題列表
           </button>
-          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-            <span id="results-status-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">開放投票中</span>
-            <span id="results-type-badge" class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">單選</span>
-            <span class="text-xs text-slate-500">總票數：<strong id="results-total-votes" class="text-indigo-600 font-semibold text-sm">0</strong> 票</span>
-            <span id="results-voted-status-badge" class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600">檢測 IP 狀態中...</span>
-          </div>
-          <h2 id="results-title" class="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">投票結果統計</h2>
-        </div>
-
-        <!-- Sorting & QR Action Buttons -->
-        <div class="grid grid-cols-1 sm:flex sm:items-center gap-2 w-full sm:w-auto">
-          <button id="btn-results-share-qr" type="button" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all shadow-xs">
-            <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-            </svg>
-            投票 QR Code / 分享
-          </button>
-          <button id="btn-toggle-sort" type="button" class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-all bg-white border-slate-300 text-slate-700 hover:bg-slate-50 shadow-xs">
-            <svg id="icon-sort-desc" class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
-            </svg>
-            <span id="sort-btn-label">依票數多寡排序</span>
-          </button>
-          <button id="btn-results-vote-now" type="button" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-            </svg>
+          <button id="btn-results-vote-now" type="button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-all">
             前往投票
           </button>
         </div>
       </div>
 
-      <!-- Chart and Details Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
-        <!-- Main Chart Card (7 cols) -->
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-3 sm:space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
-              票數長條圖分析
-            </h3>
-            <span id="chart-order-label" class="text-[11px] sm:text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">目前順序：原始選項順序</span>
-          </div>
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <p class="text-xs font-medium text-slate-500">總投遞選票</p>
+          <p id="res-metric-total-votes" class="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">0 票</p>
+        </div>
+        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <p class="text-xs font-medium text-slate-500">已參與 IP 數</p>
+          <p id="res-metric-ip-count" class="text-xl sm:text-2xl font-bold text-slate-900 mt-0.5">0 個</p>
+        </div>
+        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <p class="text-xs font-medium text-slate-500">最高票選項</p>
+          <p id="res-metric-top-option" class="text-xs sm:text-sm font-bold text-indigo-600 mt-1 truncate">暫無</p>
+        </div>
+        <div class="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs">
+          <p class="text-xs font-medium text-slate-500">當前 IP 狀態</p>
+          <p id="res-metric-my-status" class="text-xs sm:text-sm font-bold text-slate-700 mt-1">檢查中...</p>
+        </div>
+      </div>
 
-          <!-- Chart.js Container -->
-          <div class="relative h-64 sm:h-80 w-full">
+      <!-- Results Chart & Table Layout -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6">
+        <!-- Chart Section -->
+        <div class="lg:col-span-7 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+          <div class="flex items-center justify-between pb-3 mb-2 border-b border-slate-100 flex-wrap gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              票數長條圖統計 (Bar Chart)
+            </h3>
+            <button id="btn-toggle-sort-results" type="button" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 bg-indigo-50 px-2.5 py-1 rounded-lg transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path>
+              </svg>
+              <span id="sort-results-label">依票數降冪排序</span>
+            </button>
+          </div>
+          <div class="relative w-full h-64 sm:h-80">
             <canvas id="results-bar-chart"></canvas>
           </div>
-          <p class="text-[11px] sm:text-xs text-slate-400 text-center">各選項採用專屬代表色彩呈現，長條即時反映累積得票數</p>
         </div>
 
-        <!-- Detail Breakdown Cards (5 cols) -->
-        <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs space-y-3 sm:space-y-4">
-          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-            <h3 class="font-bold text-slate-800 text-sm sm:text-base">得票明細與佔比</h3>
-            <span class="text-xs text-slate-400">總有效選票: <span id="breakdown-total-count" class="font-bold text-slate-700">0</span></span>
-          </div>
-
-          <!-- Dynamic Option Percentage Progress Bars -->
-          <div id="results-bars-list" class="space-y-3 sm:space-y-4 max-h-[360px] overflow-y-auto custom-scrollbar pr-1">
-            <!-- Dynamic items -->
+        <!-- Breakdown Table Section -->
+        <div class="lg:col-span-5 bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-xs">
+          <h3 class="text-sm sm:text-base font-bold text-slate-900 pb-3 mb-3 border-b border-slate-100">
+            各選項得票佔比明細
+          </h3>
+          <div id="results-table-container" class="space-y-3">
+            <!-- Dynamically populated progress bars -->
           </div>
         </div>
       </div>
@@ -313,101 +314,92 @@
               <label for="topic-desc-input" class="block text-xs sm:text-sm font-semibold text-slate-700 mb-1 sm:mb-1.5">
                 主題說明 / 規則補充 <span class="text-xs font-normal text-slate-400">(選填)</span>
               </label>
-              <textarea id="topic-desc-input" rows="2" placeholder="說明此投票的目的、適用對象或計票注意事項..." class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm placeholder:text-slate-400"></textarea>
+              <textarea id="topic-desc-input" rows="2" placeholder="詳細說明此投票的主旨、參與對象與截止注意事項..." class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm placeholder:text-slate-400"></textarea>
             </div>
 
-            <!-- Selection Mode Radio Group -->
-            <div class="bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
-              <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">投票方式設定 <span class="text-rose-500">*</span></label>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
-                <label class="relative flex items-center gap-3 p-2.5 sm:p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+            <!-- Single or Multi selection Mode -->
+            <div class="bg-slate-50 p-3.5 sm:p-4 rounded-xl border border-slate-200">
+              <label class="block text-xs sm:text-sm font-semibold text-slate-700 mb-2">投票方式設定</label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition-colors">
                   <input type="radio" name="topic-mode-radio" value="single" checked class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                   <div>
-                    <div class="text-xs sm:text-sm font-semibold text-slate-800">單選模式</div>
-                    <div class="text-[11px] text-slate-500">每人每票僅能點選 1 個選項</div>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-800">單選模式</p>
+                    <p class="text-[11px] text-slate-400">每位投票者僅能選擇單一選項投遞</p>
                   </div>
                 </label>
-
-                <label class="relative flex items-center gap-3 p-2.5 sm:p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-300 transition-all">
+                <label class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 cursor-pointer hover:border-indigo-400 transition-colors">
                   <input type="radio" name="topic-mode-radio" value="multi" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                   <div>
-                    <div class="text-xs sm:text-sm font-semibold text-slate-800">複選模式</div>
-                    <div class="text-[11px] text-slate-500">可同時勾選多個喜好項目</div>
+                    <p class="text-xs sm:text-sm font-semibold text-slate-800">複選模式</p>
+                    <p class="text-[11px] text-slate-400">可勾選多個喜好項目，可自訂上限</p>
                   </div>
                 </label>
               </div>
 
-              <!-- Multi-choice max limit option -->
-              <div id="multi-limit-config" class="hidden mt-2.5 pt-2.5 border-t border-slate-200 flex items-center gap-2 sm:gap-3">
-                <label for="topic-max-choices-input" class="text-xs font-medium text-slate-700">複選上限設定：最多可選</label>
-                <input type="number" id="topic-max-choices-input" min="2" max="10" value="2" class="w-16 sm:w-20 px-2 py-1 border border-slate-300 rounded-lg text-sm text-center">
-                <span class="text-xs text-slate-500">項 (至少 2 項)</span>
+              <!-- Multi Selection Limit Input -->
+              <div id="multi-limit-config" class="hidden mt-3 pt-3 border-t border-slate-200 flex items-center gap-3">
+                <label for="topic-max-choices-input" class="text-xs sm:text-sm font-medium text-slate-700 whitespace-nowrap">
+                  最多可選項目數：
+                </label>
+                <input type="number" id="topic-max-choices-input" min="2" max="10" value="2" class="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 font-semibold">
+                <span class="text-xs text-slate-400">（最少 2 項，最高 10 項）</span>
               </div>
             </div>
 
-            <!-- Options Builder -->
-            <div class="space-y-3">
-              <div class="flex items-center justify-between">
+            <!-- Custom Options List -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
                 <label class="block text-xs sm:text-sm font-semibold text-slate-700">
-                  投票選項列表 <span class="text-rose-500">*</span>
-                  <span class="text-[11px] font-normal text-slate-500 ml-1">(至少需有 2 個選項)</span>
+                  投票選項列表 <span class="text-xs font-normal text-slate-400">(最少 2 項，最多 10 項)</span>
                 </label>
-                <button id="btn-add-option" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                  </svg>
-                  新增選項
+                <button type="button" id="btn-add-option-input" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+                  + 新增選項
                 </button>
               </div>
 
-              <div id="options-inputs-container" class="space-y-2 sm:space-y-2.5">
-                <!-- Rendered via JS -->
+              <div id="options-inputs-container" class="space-y-2.5">
+                <!-- Inputs generated dynamically -->
               </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="pt-3 sm:pt-4 border-t border-slate-100 flex justify-end">
-              <button id="btn-create-topic-submit" type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm rounded-xl shadow-xs shadow-indigo-200 transition-all flex items-center justify-center gap-2">
+            <div class="pt-2 flex justify-end">
+              <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                完成建立並發布主題
+                建立並發布投票主題
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Existing Topics Management List -->
+      <!-- Management Table Card -->
       <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h3 class="text-base sm:text-lg font-bold text-slate-900">現有主題管理清單</h3>
-            <p class="text-xs text-slate-500">可開啟/結束投票通道、分享專屬 QR Code 或輸入密碼刪除</p>
-          </div>
-          <span id="admin-topic-count-badge" class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">共 0 個主題</span>
+        <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between flex-wrap gap-2">
+          <h3 class="text-base sm:text-lg font-bold text-slate-900">現有主題管理清單</h3>
+          <span id="admin-topic-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+            共 0 個主題
+          </span>
         </div>
 
-        <div class="sm:hidden px-4 py-1.5 bg-slate-50 border-b border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>手機提示：表格可向右滑動查看操作按鈕</span>
-          <span>&rarr;</span>
-        </div>
-
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left text-xs sm:text-sm text-slate-600 min-w-[620px]">
-            <thead class="bg-slate-50 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
-              <tr>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[11px]">
                 <th class="px-4 sm:px-6 py-3">主題名稱</th>
-                <th class="px-3 sm:px-4 py-3">狀態</th>
-                <th class="px-3 sm:px-4 py-3">類型</th>
+                <th class="px-3 sm:px-4 py-3">通道狀態</th>
+                <th class="px-3 sm:px-4 py-3">模式</th>
                 <th class="px-3 sm:px-4 py-3">選項數</th>
-                <th class="px-3 sm:px-4 py-3">累積票數</th>
-                <th class="px-3 sm:px-4 py-3">建立時間</th>
-                <th class="px-4 sm:px-6 py-3 text-right">操作與控制</th>
+                <th class="px-3 sm:px-4 py-3">總得票數</th>
+                <th class="px-3 sm:px-4 py-3">建立日期</th>
+                <th class="px-4 sm:px-6 py-3 text-right">操作管理</th>
               </tr>
             </thead>
-            <tbody id="admin-topics-tbody" class="divide-y divide-slate-100">
-              <!-- Dynamically populated -->
+            <tbody id="admin-topics-tbody" class="divide-y divide-slate-100 text-slate-700">
+              <!-- Dynamically populated rows -->
             </tbody>
           </table>
         </div>
@@ -416,7 +408,46 @@
 
   </main>
 
-  <!-- MODAL: Results View Authentication (Triggered by 4 clicks on status badge - NO HINTS) -->
+  <!-- Share & QR Code Modal -->
+  <div id="modal-share-qr" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="truncate pr-2">
+          <h3 class="text-base sm:text-lg font-bold text-slate-900 truncate" id="modal-share-title">分享投票主題</h3>
+          <p class="text-xs text-slate-400">專屬 QR Code 與手機投票連結</p>
+        </div>
+        <button id="btn-close-share-modal" type="button" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- QR Code Container -->
+      <div class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-200">
+        <div id="modal-qrcode-container" class="bg-white p-2.5 rounded-xl shadow-xs mb-2"></div>
+        <p class="text-xs text-slate-500 font-medium text-center">使用手機相機掃描，立即開啟此主題選票</p>
+        <span id="modal-share-status-pill" class="mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+          開放投票中
+        </span>
+      </div>
+
+      <!-- Direct Link Copy Input -->
+      <div>
+        <label for="modal-share-url-input" class="block text-xs font-semibold text-slate-700 mb-1">
+          專屬投票連結：
+        </label>
+        <div class="flex items-center gap-1.5">
+          <input type="text" id="modal-share-url-input" readonly class="flex-1 min-w-0 px-3 py-2 bg-slate-100 rounded-xl border border-slate-300 text-xs font-mono text-slate-600 select-all focus:outline-none">
+          <button id="btn-modal-copy-link" type="button" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-medium transition-colors flex-shrink-0">
+            複製
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Results Authorization Modal -->
   <div id="modal-results-auth" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
       <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-1">
@@ -426,21 +457,20 @@
       </div>
 
       <div class="text-center">
-        <h3 class="text-base sm:text-lg font-bold text-slate-900">檢視投票結果驗證</h3>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">主題：<span id="results-auth-topic-title" class="font-semibold text-slate-800"></span></p>
-        <p class="text-xs text-slate-500 mt-0.5">請輸入密碼以解鎖並檢視統計結果：</p>
+        <h3 class="text-base sm:text-lg font-bold text-slate-900">管理者密碼驗證</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">即將檢視：<br><span id="results-auth-topic-title" class="font-semibold text-slate-800"></span> 之即時統計圖表</p>
       </div>
 
       <div class="pt-1">
         <label for="results-auth-password-input" class="block text-xs font-semibold text-slate-700 mb-1">
-          密碼
+          請輸入管理者密碼：
         </label>
-        <input type="password" id="results-auth-password-input" autocomplete="off" class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm">
+        <input type="password" id="results-auth-password-input" autocomplete="off" placeholder="請輸入密碼" class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm">
         <div id="results-auth-error" class="hidden text-xs text-rose-600 font-medium mt-1.5 flex items-center gap-1">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          密碼錯誤，請重新輸入
+          密碼驗證錯誤，請重新輸入
         </div>
       </div>
 
@@ -448,17 +478,14 @@
         <button id="btn-cancel-results-auth" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-colors text-center">
           取消
         </button>
-        <button id="btn-confirm-results-auth" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
-          </svg>
-          確認檢視
+        <button id="btn-confirm-results-auth" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5">
+          解鎖檢視
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Admin Login Prompt (NO HINTS GIVEN, default password 0000) -->
+  <!-- Admin Login Modal -->
   <div id="modal-admin-login" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
       <div class="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-1">
@@ -468,20 +495,20 @@
       </div>
 
       <div class="text-center">
-        <h3 class="text-base sm:text-lg font-bold text-slate-900">管理者身分驗證</h3>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">進入後台管理需要輸入管理者密碼：</p>
+        <h3 class="text-base sm:text-lg font-bold text-slate-900">後台管理認證</h3>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">進入主題建立、編輯、狀態控制與刪除管理</p>
       </div>
 
       <div class="pt-1">
         <label for="admin-login-password-input" class="block text-xs font-semibold text-slate-700 mb-1">
-          管理者密碼
+          請輸入管理者密碼：
         </label>
-        <input type="password" id="admin-login-password-input" autocomplete="off" class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm">
+        <input type="password" id="admin-login-password-input" autocomplete="off" placeholder="請輸入密碼" class="w-full px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm">
         <div id="admin-login-error" class="hidden text-xs text-rose-600 font-medium mt-1.5 flex items-center gap-1">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          密碼錯誤，請重新輸入
+          管理者密碼不正確
         </div>
       </div>
 
@@ -489,59 +516,14 @@
         <button id="btn-cancel-admin-login" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-colors text-center">
           取消
         </button>
-        <button id="btn-confirm-admin-login" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
-          </svg>
-          進入後台
+        <button id="btn-confirm-admin-login" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5">
+          驗證登入
         </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Share & QR Code Dialog -->
-  <div id="modal-share-qr" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 space-y-4">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <h3 class="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-          </svg>
-          投票 QR Code 與連結
-        </h3>
-        <button id="btn-close-share-modal" type="button" class="text-slate-400 hover:text-slate-600 p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-
-      <div class="text-center space-y-2.5">
-        <div id="modal-share-status-pill" class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
-          開放投票中
-        </div>
-        <p id="modal-share-title" class="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2"></p>
-
-        <!-- QR Code display -->
-        <div class="flex justify-center py-1">
-          <div id="modal-qrcode-container" class="p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs inline-block"></div>
-        </div>
-        <p class="text-xs text-slate-500">手機相機掃描 QR Code 即可參與投票</p>
-      </div>
-
-      <div class="pt-2 border-t border-slate-100">
-        <label class="block text-xs font-semibold text-slate-700 mb-1">專屬投票連結</label>
-        <div class="flex items-center gap-1.5">
-          <input type="text" id="modal-share-url-input" readonly class="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50 text-xs text-slate-700 font-mono select-all focus:outline-none">
-          <button id="btn-modal-copy-link" type="button" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 flex-shrink-0">
-            複製
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Edit Topic Modal -->
+  <!-- Edit Topic Modal -->
   <div id="modal-edit-topic" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-slate-200 transform transition-all space-y-4 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -595,38 +577,31 @@
               <span class="text-xs sm:text-sm font-semibold text-slate-800">複選模式</span>
             </label>
           </div>
+
+          <!-- Multi limit in Edit Modal -->
           <div id="edit-multi-limit-config" class="hidden mt-2 pt-2 border-t border-slate-200 flex items-center gap-2">
-            <label for="edit-topic-max-choices-input" class="text-xs font-medium text-slate-700">複選上限：最多可選</label>
-            <input type="number" id="edit-topic-max-choices-input" min="2" max="10" value="2" class="w-16 px-2 py-1 border border-slate-300 rounded-lg text-sm text-center">
-            <span class="text-xs text-slate-500">項</span>
+            <label for="edit-topic-max-choices-input" class="text-xs font-medium text-slate-700">最多可選：</label>
+            <input type="number" id="edit-topic-max-choices-input" min="2" max="10" class="w-20 px-2 py-1 rounded border border-slate-300 text-xs font-semibold">
+            <span class="text-[11px] text-slate-400">項</span>
           </div>
         </div>
 
-        <!-- Options Editor -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs sm:text-sm font-semibold text-slate-700">
-              投票選項內容 <span class="text-rose-500">*</span>
-              <span class="text-[11px] font-normal text-slate-500 ml-1">(至少需有 2 項)</span>
-            </label>
-            <button id="btn-edit-add-option" type="button" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
-              </svg>
-              新增選項
-            </button>
+        <!-- Options in Edit Modal -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs sm:text-sm font-semibold text-slate-700">選項編輯 (最少 2 項，最多 10 項)</label>
+            <button type="button" id="btn-edit-add-option" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">+ 新增選項</button>
           </div>
-          <div id="edit-options-inputs-container" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
-            <!-- Dynamic option rows for edit -->
+          <div id="edit-options-inputs-container" class="space-y-2">
+            <!-- Dynamically populated edit option rows -->
           </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <div class="pt-2 flex items-center justify-end gap-2">
           <button id="btn-cancel-edit-topic" type="button" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-colors">
             取消
           </button>
-          <button id="btn-save-edit-topic" type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
+          <button id="btn-confirm-edit-topic" type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs transition-colors flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
@@ -637,8 +612,6 @@
     </div>
   </div>
 
-  <!-- Delete Confirmation Modal (WITH ADMIN PASSWORD PROMPT - NO HINTS GIVEN) -->
-  
   <!-- Firestore Database Setup & Rules Guide Modal -->
   <div id="modal-firestore-guide" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
@@ -706,6 +679,7 @@ service cloud.firestore {
     </div>
   </div>
 
+  <!-- Delete Confirmation Modal (WITH ADMIN PASSWORD PROMPT) -->
   <div id="modal-delete" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 sm:p-6 shadow-2xl border border-slate-200 transform transition-all space-y-4">
       <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-1">
@@ -827,7 +801,7 @@ service cloud.firestore {
       }
     ];
 
-    // Firebase Configuration & Initialization
+    // Firebase Configuration & Initialization (votenew-9ec01)
     const firebaseConfig = {
       apiKey: "AIzaSyAQBBeYXA6Y71KQQtNv5TONSmZ-3StVQNQ",
       authDomain: "votenew-9ec01.firebaseapp.com",
@@ -920,7 +894,7 @@ service cloud.firestore {
       }
     }
 
-    // Real-time Cloud Firestore synchronization with smart local merge
+    // Real-time Cloud Firestore synchronization
     function initDatabaseSync() {
       if (!db) {
         updateDatabaseStatusBadge(false, '本機儲存模式 (未載入 Firebase)');
@@ -941,9 +915,7 @@ service cloud.firestore {
 
               // Check if marked as deleted either remotely or locally
               if (data.isDeleted === true || state.deletedTopicIds.has(topicId)) {
-                // Keep record in deletedTopicIds
                 state.deletedTopicIds.add(topicId);
-                // Also ensure remote document is deleted
                 if (db) {
                   db.collection('voting_topics').doc(topicId).delete().catch(() => {});
                 }
@@ -962,7 +934,6 @@ service cloud.firestore {
             saveTopicsToLocal(validRemoteTopics);
             refreshCurrentView();
           } else {
-            // Remote collection is completely empty: reflect empty state immediately!
             state.topics = [];
             saveTopicsToLocal([]);
             refreshCurrentView();
@@ -1033,23 +1004,19 @@ service cloud.firestore {
     function deleteTopicFromDatabase(topicId) {
       if (!topicId) return;
 
-      // 1. Add to tombstone set and persist
       state.deletedTopicIds.add(topicId);
       try {
         localStorage.setItem('voting_app_deleted_ids', JSON.stringify(Array.from(state.deletedTopicIds)));
       } catch (e) {}
 
-      // 2. Remove immediately from memory state and persist topics
       state.topics = state.topics.filter((t) => t.id !== topicId);
       saveTopicsToLocal(state.topics);
 
-      // 3. Re-render views immediately so UI reflects deletion immediately
       renderAdminTable();
       if (state.activeView === 'topics') {
         renderTopicsList();
       }
 
-      // 4. Delete directly from Cloud Firestore
       if (db) {
         db.collection('voting_topics').doc(topicId).delete().then(() => {
           console.log("Firestore successfully deleted topic:", topicId);
@@ -1185,7 +1152,21 @@ service cloud.firestore {
       document.body.removeChild(input);
     }
 
-    // View Switching
+    // View Switching & Dynamic Brand Behavior
+    function updateBrandInteractivity(viewName) {
+      const brandContainer = document.getElementById('nav-brand-container');
+      if (!brandContainer) return;
+
+      // On scan-to-vote page ('vote'): completely inert, no link, no cursor pointer, no title
+      if (viewName === 'vote') {
+        brandContainer.className = 'flex items-center gap-2 text-left flex-shrink-0 min-w-0 select-none cursor-default';
+        brandContainer.removeAttribute('title');
+      } else {
+        brandContainer.className = 'flex items-center gap-2 text-left flex-shrink-0 min-w-0 select-none cursor-pointer transition-transform active:scale-95';
+        brandContainer.setAttribute('title', '連續點選 4 下進入後台管理');
+      }
+    }
+
     function switchView(viewName, topicId = null) {
       if (viewName === 'admin' && !state.isAdminLoggedIn) {
         openAdminLoginModal();
@@ -1194,6 +1175,8 @@ service cloud.firestore {
 
       state.activeView = viewName;
       state.selectedTopicId = topicId;
+
+      updateBrandInteractivity(viewName);
 
       document.getElementById('view-topics-list').classList.add('hidden');
       document.getElementById('view-vote').classList.add('hidden');
@@ -1216,11 +1199,16 @@ service cloud.firestore {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 4-Click Brand Tracker (Top-Left 4 clicks triggers admin entry)
+    // 4-Click Brand Tracker (Active ONLY on non-vote views)
     let brandClickCount = 0;
     let brandClickTimer = null;
 
-    document.getElementById('nav-brand-btn').addEventListener('click', () => {
+    document.getElementById('nav-brand-container').addEventListener('click', () => {
+      // In scan-to-vote page ('vote'): no link or action allowed
+      if (state.activeView === 'vote') {
+        return;
+      }
+
       brandClickCount++;
       clearTimeout(brandClickTimer);
 
@@ -1535,39 +1523,37 @@ service cloud.firestore {
       const statusBadge = document.getElementById('vote-card-status-badge');
       const typeBadge = document.getElementById('vote-card-type-badge');
       const maxBadge = document.getElementById('vote-card-max-badge');
-      const closedNotice = document.getElementById('vote-closed-notice');
 
       const isOpen = topic.status === 'open';
 
       if (isOpen) {
         statusBadge.textContent = '開放投票中';
         statusBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800 transition-transform active:scale-95 select-none focus:outline-none cursor-pointer';
-        closedNotice.classList.add('hidden');
       } else {
         statusBadge.textContent = '投票已結束';
         statusBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-slate-200 text-slate-700 transition-transform active:scale-95 select-none focus:outline-none cursor-pointer';
-        closedNotice.classList.remove('hidden');
       }
 
       if (topic.type === 'multi') {
         typeBadge.textContent = '複選投票';
-        typeBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-100 text-amber-800';
+        typeBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200';
         maxBadge.classList.remove('hidden');
-        maxBadge.textContent = topic.maxChoices ? `最多可選 ${topic.maxChoices} 項` : '無限制選取項目';
+        maxBadge.textContent = `上限 ${topic.maxChoices || 2} 項`;
       } else {
         typeBadge.textContent = '單選投票';
-        typeBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-indigo-100 text-indigo-700';
+        typeBadge.className = 'px-2 sm:px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200';
         maxBadge.classList.add('hidden');
       }
 
       const hasVoted = topic.votedIps && topic.votedIps.includes(state.currentIp);
       const userChoices = (topic.userVotes && topic.userVotes[state.currentIp]) || [];
-      const noticeBox = document.getElementById('vote-ip-notice');
+
+      const noticeBox = document.getElementById('vote-status-notice-box');
       const submitBtn = document.getElementById('btn-submit-vote');
       const sectionLabel = document.getElementById('vote-section-label');
 
-      if (!isOpen && !hasVoted) {
-        noticeBox.className = 'p-3 sm:p-4 mx-4 sm:mx-6 mt-4 sm:mt-6 rounded-xl border bg-slate-100 border-slate-200 text-slate-700 flex items-start gap-2.5 sm:gap-3';
+      if (!isOpen) {
+        noticeBox.className = 'p-3.5 sm:p-4 mx-4 sm:mx-6 mt-4 sm:mt-6 rounded-xl border bg-slate-100 border-slate-200 text-slate-700 flex items-start gap-2.5 sm:gap-3';
         noticeBox.innerHTML = `
           <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5">
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1593,7 +1579,7 @@ service cloud.firestore {
           </div>
           <div class="flex-1 text-xs sm:text-sm">
             <p class="font-bold text-emerald-900">您已於此主題完成投票（已投選票檢視）</p>
-            <p class="text-emerald-800 mt-0.5 leading-relaxed">當前 IP (<span class="font-mono font-semibold">${state.currentIp}</span>) 已完成投票。下方綠色標記為您已投下的選項內容，本系統每個 IP 僅限投票一次，無法修改或重新投票。</p>
+            <p class="text-emerald-800 mt-0.5 leading-relaxed">已完成投票。下方綠色標記為您已投下的選項內容，本系統每個 IP 僅限投票一次，無法修改或重新投票。</p>
           </div>
         `;
         sectionLabel.textContent = '您的投票紀錄：';
@@ -1614,8 +1600,8 @@ service cloud.firestore {
             </svg>
           </div>
           <div class="flex-1 text-xs sm:text-sm">
-            <p class="font-bold">IP 資格驗證通過</p>
-            <p class="text-indigo-800 mt-0.5">當前 IP：<span class="font-mono font-semibold">${state.currentIp}</span>，每人限投一次。</p>
+            <p class="font-bold">資格驗證通過</p>
+            <p class="text-indigo-800 mt-0.5">請依照主題規則勾選您支持的項目，每人限投一次。</p>
           </div>
         `;
         sectionLabel.textContent = '請選擇您的選項：';
@@ -1721,19 +1707,30 @@ service cloud.firestore {
 
       if (topic.status === 'closed') {
         hint.textContent = '⚠️ 此主題已結束投票，不開放勾選';
-        hint.className = 'text-xs text-rose-600 font-semibold text-center sm:text-left';
-      } else if (topic.type === 'multi') {
-        const max = topic.maxChoices || 999;
-        hint.textContent = `已勾選 ${checkedInputs.length} 項 (最多可選 ${max} 項)`;
-        if (checkedInputs.length > max) {
-          hint.textContent = `⚠️ 已超過勾選上限 (最多 ${max} 項)，請取消勾選多餘選項`;
-          hint.className = 'text-xs text-rose-600 font-semibold text-center sm:text-left';
+        hint.className = 'text-xs text-slate-500 font-medium text-center sm:text-left';
+        return;
+      }
+
+      if (topic.type === 'single') {
+        if (checkedInputs.length === 1) {
+          hint.textContent = '✓ 已選擇 1 項，確認後請點擊送出選票';
+          hint.className = 'text-xs text-emerald-600 font-semibold text-center sm:text-left';
         } else {
+          hint.textContent = '請選擇 1 個選項';
           hint.className = 'text-xs text-slate-500 font-medium text-center sm:text-left';
         }
       } else {
-        hint.textContent = checkedInputs.length > 0 ? '已選取 1 項' : '請點選上方任一選項';
-        hint.className = 'text-xs text-slate-500 font-medium text-center sm:text-left';
+        const max = topic.maxChoices || 2;
+        if (checkedInputs.length > max) {
+          hint.textContent = `⚠️ 超過上限！最多僅能選擇 ${max} 項（目前已選 ${checkedInputs.length} 項）`;
+          hint.className = 'text-xs text-rose-600 font-semibold text-center sm:text-left';
+        } else if (checkedInputs.length === 0) {
+          hint.textContent = `複選模式：請選擇 1 至 ${max} 項`;
+          hint.className = 'text-xs text-slate-500 font-medium text-center sm:text-left';
+        } else {
+          hint.textContent = `✓ 已選擇 ${checkedInputs.length} / ${max} 項，可直接送出選票`;
+          hint.className = 'text-xs text-emerald-600 font-semibold text-center sm:text-left';
+        }
       }
     }
 
@@ -1799,81 +1796,83 @@ service cloud.firestore {
 
       state.selectedTopicId = topicId;
 
-      document.getElementById('results-title').textContent = topic.title;
-      const totalVotes = topic.options.reduce((sum, opt) => sum + opt.votes, 0);
-      document.getElementById('results-total-votes').textContent = totalVotes;
-      document.getElementById('breakdown-total-count').textContent = totalVotes;
-
-      const typeBadge = document.getElementById('results-type-badge');
-      typeBadge.textContent = topic.type === 'multi' ? '複選' : '單選';
+      document.getElementById('results-topic-title').textContent = topic.title;
+      document.getElementById('results-topic-desc').textContent = topic.description || '即時統整各選項得票分佈';
 
       const statusBadge = document.getElementById('results-status-badge');
-      const isOpen = topic.status === 'open';
-      if (isOpen) {
+      if (topic.status === 'open') {
+        statusBadge.className = 'px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-emerald-100 text-emerald-800';
         statusBadge.textContent = '開放投票中';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800';
       } else {
+        statusBadge.className = 'px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-semibold bg-rose-100 text-rose-800';
         statusBadge.textContent = '投票已結束';
-        statusBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-200 text-slate-700';
+      }
+
+      const totalVotes = topic.options.reduce((sum, opt) => sum + opt.votes, 0);
+      const uniqueIps = (topic.votedIps && topic.votedIps.length) || 0;
+
+      document.getElementById('res-metric-total-votes').textContent = `${totalVotes} 票`;
+      document.getElementById('res-metric-ip-count').textContent = `${uniqueIps} 人`;
+
+      let topOpt = null;
+      let topVotes = -1;
+      topic.options.forEach((opt) => {
+        if (opt.votes > topVotes) {
+          topVotes = opt.votes;
+          topOpt = opt;
+        }
+      });
+
+      const topOptEl = document.getElementById('res-metric-top-option');
+      if (topOpt && topVotes > 0) {
+        topOptEl.textContent = `${topOpt.text} (${topVotes}票)`;
+      } else {
+        topOptEl.textContent = '尚未產生領先項';
       }
 
       updateResultsVotedBadge(topicId);
 
-      let displayedOptions = [...topic.options];
-      if (state.resultsSortByVotes) {
-        displayedOptions.sort((a, b) => b.votes - a.votes);
-        document.getElementById('chart-order-label').textContent = '目前順序：依票數高低降冪排列';
-        document.getElementById('sort-btn-label').textContent = '恢復預設選項順序';
-        document.getElementById('btn-toggle-sort').classList.add('bg-indigo-50', 'border-indigo-300', 'text-indigo-700');
-      } else {
-        document.getElementById('chart-order-label').textContent = '目前順序：原始選項順序';
-        document.getElementById('sort-btn-label').textContent = '依票數多寡排序';
-        document.getElementById('btn-toggle-sort').classList.remove('bg-indigo-50', 'border-indigo-300', 'text-indigo-700');
-      }
-
-      renderChart(displayedOptions, totalVotes);
-      renderProgressBars(displayedOptions, totalVotes);
+      renderResultsBreakdownTable(topic, totalVotes);
+      renderChart(topic.options, totalVotes);
     }
 
     function updateResultsVotedBadge(topicId) {
       const topic = state.topics.find((t) => t.id === topicId);
-      const statusBadge = document.getElementById('results-voted-status-badge');
-      const voteNowBtn = document.getElementById('btn-results-vote-now');
-
       if (!topic) return;
 
       const hasVoted = topic.votedIps && topic.votedIps.includes(state.currentIp);
-      const isOpen = topic.status === 'open';
+      const statusBadge = document.getElementById('res-metric-my-status');
+      const voteNowBtn = document.getElementById('btn-results-vote-now');
 
-      if (!isOpen) {
-        statusBadge.className = 'px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600';
-        statusBadge.textContent = '投票通道已結束關閉';
-        voteNowBtn.textContent = '查看投票題目';
-      } else if (hasVoted) {
+      if (hasVoted) {
         statusBadge.className = 'px-2 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
-        statusBadge.textContent = `當前 IP (${state.currentIp}) 已投票`;
+        statusBadge.textContent = '當前 IP 已投票';
         voteNowBtn.textContent = '查看我的投票內容';
       } else {
         statusBadge.className = 'px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600';
-        statusBadge.textContent = `當前 IP (${state.currentIp}) 尚未投票`;
+        statusBadge.textContent = '當前 IP 尚未投票';
         voteNowBtn.textContent = '立即前往投票';
       }
     }
 
     function renderChart(options, totalVotes) {
       const canvas = document.getElementById('results-bar-chart');
+      if (!canvas) return;
+
       const ctx = canvas.getContext('2d');
-
-      const labels = options.map((opt) => opt.text);
-      const data = options.map((opt) => opt.votes);
-      const bgColors = options.map((opt) => COLOR_PALETTE[opt.colorIndex % COLOR_PALETTE.length].bg);
-      const borderColors = options.map((opt) => COLOR_PALETTE[opt.colorIndex % COLOR_PALETTE.length].border);
-
       if (state.chartInstance) {
         state.chartInstance.destroy();
       }
 
-      const isMobile = window.innerWidth < 640;
+      let displayOptions = [...options];
+      if (state.resultsSortByVotes) {
+        displayOptions.sort((a, b) => b.votes - a.votes);
+      }
+
+      const labels = displayOptions.map((opt) => opt.text);
+      const dataValues = displayOptions.map((opt) => opt.votes);
+      const bgColors = displayOptions.map((opt) => COLOR_PALETTE[opt.colorIndex % COLOR_PALETTE.length].bg);
+      const borderColors = displayOptions.map((opt) => COLOR_PALETTE[opt.colorIndex % COLOR_PALETTE.length].border);
 
       state.chartInstance = new Chart(ctx, {
         type: 'bar',
@@ -1881,27 +1880,25 @@ service cloud.firestore {
           labels: labels,
           datasets: [{
             label: '獲得票數',
-            data: data,
+            data: dataValues,
             backgroundColor: bgColors,
             borderColor: borderColors,
             borderWidth: 1.5,
-            borderRadius: 8,
-            maxBarThickness: isMobile ? 32 : 48
+            borderRadius: 6,
+            maxBarThickness: 48
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: {
-              display: false
-            },
+            legend: { display: false },
             tooltip: {
               callbacks: {
                 label: function(context) {
                   const val = context.raw || 0;
-                  const pct = totalVotes > 0 ? ((val / totalVotes) * 100).toFixed(1) : '0.0';
-                  return ` 獲得票數: ${val} 票 (${pct}%)`;
+                  const pct = totalVotes > 0 ? ((val / totalVotes) * 100).toFixed(1) : 0;
+                  return ` 得票數: ${val} 票 (${pct}%)`;
                 }
               }
             }
@@ -1909,33 +1906,15 @@ service cloud.firestore {
           scales: {
             y: {
               beginAtZero: true,
-              ticks: {
-                stepSize: 1,
-                font: {
-                  family: 'Noto Sans TC',
-                  size: isMobile ? 10 : 12
-                }
-              },
-              grid: {
-                color: '#f1f5f9'
-              }
+              ticks: { precision: 0 },
+              grid: { color: '#f1f5f9' }
             },
             x: {
+              grid: { display: false },
               ticks: {
-                font: {
-                  family: 'Noto Sans TC',
-                  size: isMobile ? 10 : 12
-                },
                 maxRotation: 30,
-                minRotation: 0,
-                callback: function(val) {
-                  const label = this.getLabelForValue(val);
-                  const limit = isMobile ? 8 : 12;
-                  return label.length > limit ? label.substr(0, limit) + '...' : label;
-                }
-              },
-              grid: {
-                display: false
+                autoSkip: false,
+                font: { size: 11 }
               }
             }
           }
@@ -1943,114 +1922,107 @@ service cloud.firestore {
       });
     }
 
-    function renderProgressBars(options, totalVotes) {
-      const container = document.getElementById('results-bars-list');
+    function renderResultsBreakdownTable(topic, totalVotes) {
+      const container = document.getElementById('results-table-container');
       container.innerHTML = '';
 
-      if (options.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400">目前尚無選項資料</p>';
-        return;
+      let optionsList = [...topic.options];
+      if (state.resultsSortByVotes) {
+        optionsList.sort((a, b) => b.votes - a.votes);
       }
 
-      options.forEach((opt) => {
-        const pct = totalVotes > 0 ? ((opt.votes / totalVotes) * 100).toFixed(1) : '0.0';
+      optionsList.forEach((opt) => {
+        const pct = totalVotes > 0 ? ((opt.votes / totalVotes) * 100).toFixed(1) : 0;
         const color = COLOR_PALETTE[opt.colorIndex % COLOR_PALETTE.length];
 
-        const item = document.createElement('div');
-        item.className = 'space-y-1.5 p-2 rounded-xl hover:bg-slate-50 transition-colors';
-        item.innerHTML = `
-          <div class="flex items-center justify-between text-xs gap-2">
-            <span class="font-medium text-slate-800 flex items-center gap-1.5 sm:gap-2 truncate min-w-0">
-              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${color.border}"></span>
-              <span class="truncate" title="${opt.text}">${opt.text}</span>
+        const row = document.createElement('div');
+        row.className = 'p-3 rounded-xl bg-slate-50 border border-slate-100 flex flex-col gap-1.5';
+
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-xs sm:text-sm">
+            <span class="font-semibold text-slate-800 flex items-center gap-2 truncate pr-2">
+              <span class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: ${color.border}"></span>
+              <span class="truncate">${opt.text}</span>
             </span>
-            <span class="text-slate-600 font-mono font-semibold flex-shrink-0 whitespace-nowrap">
-              ${opt.votes} 票 <span class="text-slate-400 font-normal">(${pct}%)</span>
-            </span>
+            <span class="font-mono font-bold text-slate-900 whitespace-nowrap">${opt.votes} 票 (${pct}%)</span>
           </div>
-          <div class="w-full bg-slate-100 rounded-full h-2.5 sm:h-3 overflow-hidden">
-            <div class="h-2.5 sm:h-3 rounded-full transition-all duration-500" style="width: ${pct}%; background-color: ${color.border};"></div>
+          <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" style="width: ${pct}%; background-color: ${color.border}"></div>
           </div>
         `;
-        container.appendChild(item);
+        container.appendChild(row);
       });
     }
 
-    document.getElementById('btn-toggle-sort').addEventListener('click', () => {
+    document.getElementById('btn-toggle-sort-results').addEventListener('click', () => {
       state.resultsSortByVotes = !state.resultsSortByVotes;
+      const label = document.getElementById('sort-results-label');
+      label.textContent = state.resultsSortByVotes ? '恢復預設選項順序' : '依票數降冪排序';
       if (state.selectedTopicId) {
         renderResultsView(state.selectedTopicId);
       }
     });
 
-    document.getElementById('btn-results-share-qr').addEventListener('click', () => {
-      if (state.selectedTopicId) {
-        openShareModal(state.selectedTopicId);
-      }
-    });
+    // Admin View
+    function renderAdminView() {
+      renderAdminTable();
+    }
 
-    // Toggle Creation Panel (Default collapsed, click to expand)
-    function toggleCreatePanel(forceState = null) {
-      if (forceState !== null) {
-        state.isCreatePanelExpanded = forceState;
-      } else {
-        state.isCreatePanelExpanded = !state.isCreatePanelExpanded;
-      }
-
+    // Toggle Collapsible Create Topic Panel
+    function toggleCreatePanel(expand) {
       const body = document.getElementById('create-topic-panel-body');
       const icon = document.getElementById('icon-toggle-create-panel');
       const btn = document.getElementById('btn-expand-create-form');
 
+      state.isCreatePanelExpanded = typeof expand === 'boolean' ? expand : !state.isCreatePanelExpanded;
+
       if (state.isCreatePanelExpanded) {
         body.classList.remove('hidden');
-        if (icon) icon.classList.add('rotate-180');
-        if (btn) btn.title = '收合表單';
-        document.getElementById('topic-title-input').focus();
+        icon.classList.add('rotate-180');
+        btn.classList.add('bg-indigo-100');
       } else {
         body.classList.add('hidden');
-        if (icon) icon.classList.remove('rotate-180');
-        if (btn) btn.title = '展開建立表單';
+        icon.classList.remove('rotate-180');
+        btn.classList.remove('bg-indigo-100');
       }
     }
 
-    document.getElementById('btn-toggle-create-panel').addEventListener('click', () => {
+    document.getElementById('btn-toggle-create-panel').addEventListener('click', (e) => {
+      if (e.target.closest('#btn-expand-create-form')) return;
       toggleCreatePanel();
     });
 
-    // Render Admin View
-    function renderAdminView() {
-      // Creation panel defaults to collapsed on entry
-      toggleCreatePanel(false);
-      initOptionsInputs();
-      renderAdminTable();
-    }
+    document.getElementById('btn-expand-create-form').addEventListener('click', () => {
+      toggleCreatePanel();
+    });
 
     function initOptionsInputs() {
       const container = document.getElementById('options-inputs-container');
       container.innerHTML = '';
-      state.nextOptionTempId = 1;
-
-      addOptionInputRow('');
-      addOptionInputRow('');
-      addOptionInputRow('');
+      addOptionInput('', false);
+      addOptionInput('', false);
+      addOptionInput('', false);
     }
 
-    function addOptionInputRow(defaultVal = '') {
+    function addOptionInput(value = '', canDelete = true) {
       const container = document.getElementById('options-inputs-container');
-      const rowId = `opt-input-row-${state.nextOptionTempId++}`;
-      const colorIndex = (container.children.length) % COLOR_PALETTE.length;
-      const color = COLOR_PALETTE[colorIndex];
+      if (container.children.length >= 10) {
+        showToast('最多支援 10 個選項', 'error');
+        return;
+      }
+
+      const idx = container.children.length;
+      const color = COLOR_PALETTE[idx % COLOR_PALETTE.length];
 
       const row = document.createElement('div');
-      row.id = rowId;
-      row.className = 'flex items-center gap-2 group';
+      row.className = 'option-input-row flex items-center gap-2 group';
 
       row.innerHTML = `
-        <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: ${color.bg}; border: 1px solid ${color.border}">
-          <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full" style="background-color: ${color.border}"></span>
+        <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0" style="background-color: ${color.bg}; border: 1px solid ${color.border}">
+          <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${color.border}"></span>
         </div>
-        <input type="text" value="${defaultVal}" placeholder="請輸入選項內容" required class="flex-1 min-w-0 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-xs sm:text-sm">
-        <button type="button" class="btn-remove-option p-1.5 sm:p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0" title="刪除此選項">
+        <input type="text" placeholder="請輸入選項內容" required class="flex-1 min-w-0 px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-xs sm:text-sm placeholder:text-slate-400">
+        <button type="button" class="btn-remove-option p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors flex-shrink-0 ${idx < 2 ? 'invisible' : ''}" title="移除此選項">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
           </svg>
@@ -2059,26 +2031,36 @@ service cloud.firestore {
 
       row.querySelector('.btn-remove-option').addEventListener('click', () => {
         if (container.children.length <= 2) {
-          showToast('投票主題至少需要有 2 個選項！', 'error');
+          showToast('最少必須保留 2 個選項！', 'error');
           return;
         }
         row.remove();
+        updateOptionInputsDeleteButtons();
       });
 
       container.appendChild(row);
+      updateOptionInputsDeleteButtons();
     }
 
-    document.getElementById('btn-add-option').addEventListener('click', () => {
+    function updateOptionInputsDeleteButtons() {
       const container = document.getElementById('options-inputs-container');
-      if (container.children.length >= 10) {
-        showToast('單一主題最多支援 10 個選項', 'error');
-        return;
-      }
-      addOptionInputRow();
+      const rows = container.querySelectorAll('.option-input-row');
+      rows.forEach((row, i) => {
+        const btn = row.querySelector('.btn-remove-option');
+        if (rows.length <= 2) {
+          btn.classList.add('invisible');
+        } else {
+          btn.classList.remove('invisible');
+        }
+      });
+    }
+
+    document.getElementById('btn-add-option-input').addEventListener('click', () => {
+      addOptionInput('', true);
     });
 
-    document.querySelectorAll('input[name="topic-mode-radio"]').forEach((radio) => {
-      radio.addEventListener('change', (e) => {
+    document.querySelectorAll('input[name="topic-mode-radio"]').forEach((r) => {
+      r.addEventListener('change', (e) => {
         const configBox = document.getElementById('multi-limit-config');
         if (e.target.value === 'multi') {
           configBox.classList.remove('hidden');
@@ -2126,6 +2108,7 @@ service cloud.firestore {
       };
 
       state.topics.unshift(newTopic);
+      saveTopicsToLocal(state.topics);
       syncTopicToDatabase(newTopic);
 
       titleInput.value = '';
@@ -2383,13 +2366,9 @@ service cloud.firestore {
       topic.options = newOptions;
       topic.updatedAt = Date.now();
 
-      // Immediately persist to local storage
       saveTopicsToLocal(state.topics);
-
-      // Immediately sync to Cloud Firestore
       syncTopicToDatabase(topic);
 
-      // Close modal and refresh views
       closeEditTopicModal();
       showToast(`主題「${topic.title}」已成功更新！`, 'success');
       renderAdminTable();
@@ -2471,24 +2450,6 @@ service cloud.firestore {
       if (state.selectedTopicId) switchView('vote', state.selectedTopicId);
     });
 
-
-
-    // Handle Hash Routing
-    function handleHashRouting() {
-      const hash = window.location.hash;
-      if (hash && hash.startsWith('#vote-')) {
-        const topicId = hash.replace('#vote-', '');
-        const topic = state.topics.find((t) => t.id === topicId);
-        if (topic) {
-          switchView('vote', topic.id);
-          return true;
-        }
-      }
-      return false;
-    }
-
-    window.addEventListener('hashchange', handleHashRouting);
-
     // Firestore Guide Modal Event Listeners
     function openFirestoreGuideModal() {
       const modal = document.getElementById('modal-firestore-guide');
@@ -2518,6 +2479,22 @@ service cloud.firestore {
         copyToClipboard(rulesText, 'Firestore 安全規則代碼已複製！');
       });
     }
+
+    // Handle Hash Routing
+    function handleHashRouting() {
+      const hash = window.location.hash;
+      if (hash && hash.startsWith('#vote-')) {
+        const topicId = hash.replace('#vote-', '');
+        const topic = state.topics.find((t) => t.id === topicId);
+        if (topic) {
+          switchView('vote', topic.id);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    window.addEventListener('hashchange', handleHashRouting);
 
     window.addEventListener('DOMContentLoaded', () => {
       loadLocalState();
